@@ -1,14 +1,545 @@
-<html>
-  <head>
-    <title>The Real Start</title>
-  </head>
-  <body>
-    <h1 style="font-family: sans-serif; color: #8C1A06; text-align: center;">
-      The Real Start
-    </h1>
-	<button onclick="window.open('https://fayasmk.pages.dev', '_blank')"
-      style="display: block; margin: 20px auto; padding: 10px 30px; background-color: #8C1A06; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer;">
-      Click Me
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IMAGINE — AI Image Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Fraunces:ital,opsz,wght@0,9..144,300;1,9..144,200&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#0a0a0f;--paper:#f0ece3;--cream:#e8e0d0;--rust:#c84b2f;--rust-dim:#a03a22;--muted:#7a7060;--line:rgba(10,10,15,0.12); }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:'DM Mono',monospace;min-height:100vh;overflow-x:hidden}
+  header{border-bottom:1px solid var(--line);padding:20px 40px;display:flex;align-items:baseline;gap:20px}
+  .logo{font-family:'Bebas Neue',sans-serif;font-size:2.4rem;letter-spacing:.1em}
+  .logo span{color:var(--rust)}
+  .tagline{font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+  .status-dot{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .dot{width:7px;height:7px;border-radius:50%;background:#999;transition:background .3s}
+  .dot.live{background:#4caf50;box-shadow:0 0 8px #4caf5080;animation:pulse 2s infinite}
+  .dot.error{background:var(--rust)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .layout{display:grid;grid-template-columns:420px 1fr;min-height:calc(100vh - 70px)}
+  .controls{border-right:1px solid var(--line);padding:32px;display:flex;flex-direction:column;gap:0;overflow-y:auto;max-height:calc(100vh - 70px)}
+  .section-label{font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;margin-top:28px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  .section-label:first-child{margin-top:0}
+  label{display:block;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;margin-top:16px}
+  textarea,select{width:100%;background:var(--cream);border:1px solid var(--line);color:var(--ink);font-family:'DM Mono',monospace;font-size:.8rem;padding:10px 12px;outline:none;transition:border-color .2s;appearance:none}
+  textarea:focus,select:focus{border-color:var(--rust)}
+  textarea{resize:vertical;min-height:90px;line-height:1.5}
+  select{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237a7060'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+  .ratio-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .ratio-btn{background:var(--cream);border:1px solid var(--line);padding:8px 4px;font-family:'DM Mono',monospace;font-size:.65rem;cursor:pointer;transition:all .15s;color:var(--muted);text-align:center}
+  .ratio-btn:hover{border-color:var(--rust);color:var(--ink)}
+  .ratio-btn.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .style-grid{display:flex;flex-wrap:wrap;gap:6px}
+  .style-chip{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.08em;padding:5px 10px;border:1px solid var(--line);cursor:pointer;background:var(--cream);color:var(--muted);transition:all .15s;user-select:none}
+  .style-chip:hover{border-color:var(--ink);color:var(--ink)}
+  .style-chip.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .slider-row{display:flex;align-items:center;gap:12px}
+  input[type=range]{flex:1;-webkit-appearance:none;height:2px;background:var(--line);outline:none;cursor:pointer}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--rust);border:2px solid var(--paper);box-shadow:0 0 0 1px var(--rust)}
+  .generate-btn{margin-top:28px;width:100%;padding:16px;background:var(--rust);color:var(--paper);border:none;font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.15em;cursor:pointer;transition:all .2s}
+  .generate-btn:hover:not(:disabled){background:var(--rust-dim)}
+  .generate-btn:disabled{opacity:.5;cursor:not-allowed}
+  .output{padding:40px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:24px;overflow-y:auto;max-height:calc(100vh - 70px)}
+  .placeholder{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;opacity:.35;text-align:center;min-height:400px;width:100%}
+  .placeholder-icon{font-size:4rem;font-family:'Fraunces',serif;font-style:italic}
+  .placeholder-text{font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+  .image-card{width:100%;max-width:640px;background:var(--cream);border:1px solid var(--line);overflow:hidden;animation:fadeUp .4s ease}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+  .image-card img{width:100%;display:block}
+  .image-meta{padding:12px 16px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+  .image-meta-info{font-size:.6rem;letter-spacing:.1em;color:var(--muted)}
+  .download-btn{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;padding:6px 14px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;transition:all .15s}
+  .download-btn:hover{background:var(--ink);color:var(--paper)}
+  .progress-bar{width:100%;max-width:640px;height:2px;background:var(--line);overflow:hidden}
+  .progress-fill{height:100%;background:var(--rust);width:40%;animation:slide 1.2s linear infinite}
+  @keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
+  .log-line{width:100%;max-width:640px;font-size:.65rem;color:var(--muted);font-style:italic;text-align:center}
+  .error-msg{background:#fff0ee;border:1px solid var(--rust);padding:14px 16px;font-size:.75rem;color:var(--rust);width:100%;max-width:640px;line-height:1.6;word-break:break-all}
+  .debug-box{background:#f5f0e8;border:1px solid var(--line);padding:12px 16px;font-size:.6rem;color:var(--muted);width:100%;max-width:640px;line-height:1.8;white-space:pre-wrap;word-break:break-all;max-height:200px;overflow-y:auto}
+  .num-badge{display:inline-block;background:var(--rust);color:var(--paper);font-family:'Bebas Neue',sans-serif;font-size:.85rem;padding:2px 8px;letter-spacing:.1em}
+  .row{display:flex;gap:12px}
+  .row>*{flex:1}
+  @media(max-width:900px){.layout{grid-template-columns:1fr}.controls{max-height:none;border-right:none;border-bottom:1px solid var(--line)}.output{max-height:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">IMAG<span>I</span>NE</div>
+  <div class="tagline">AI Image Studio &middot; Fooocus Engine</div>
+  <div class="status-dot">
+    <div class="dot" id="statusDot"></div>
+    <span id="statusText">Connecting&hellip;</span>
+  </div>
+</header>
+<div class="layout">
+  <div class="controls">
+    <div class="section-label">Prompt</div>
+    <label>Describe your image</label>
+    <textarea id="prompt" placeholder="a majestic red fox on mossy rocks, golden hour, cinematic…"></textarea>
+    <label>Negative prompt</label>
+    <textarea id="negPrompt" style="min-height:60px" placeholder="blurry, low quality, watermark…"></textarea>
+
+    <div class="section-label">Aspect Ratio</div>
+    <div class="ratio-grid" id="ratioGrid">
+      <button class="ratio-btn" data-key="9:7">9:7</button>
+      <button class="ratio-btn active" data-key="1:1">1:1</button>
+      <button class="ratio-btn" data-key="7:9">7:9</button>
+      <button class="ratio-btn" data-key="3:2">3:2</button>
+      <button class="ratio-btn" data-key="2:3">2:3</button>
+      <button class="ratio-btn" data-key="7:4">7:4</button>
+      <button class="ratio-btn" data-key="4:7">4:7</button>
+      <button class="ratio-btn" data-key="12:5">12:5</button>
+      <button class="ratio-btn" data-key="5:12">5:12</button>
+    </div>
+
+    <div class="section-label">Style Presets</div>
+    <div class="style-grid">
+      <div class="style-chip active" data-val="Fooocus V2">Fooocus V2</div>
+      <div class="style-chip" data-val="Fooocus Enhance">Enhance</div>
+      <div class="style-chip" data-val="Fooocus Sharp">Sharp</div>
+      <div class="style-chip" data-val="Fooocus Photograph">Photograph</div>
+      <div class="style-chip" data-val="Fooocus Anime">Anime</div>
+      <div class="style-chip" data-val="Fooocus Masterpiece">Masterpiece</div>
+      <div class="style-chip" data-val="SAI Cinematic">Cinematic</div>
+      <div class="style-chip" data-val="SAI Fantasy Art">Fantasy Art</div>
+      <div class="style-chip" data-val="SAI Comic Book">Comic Book</div>
+      <div class="style-chip" data-val="SAI Neonpunk">Neon Punk</div>
+    </div>
+
+    <div class="section-label">Settings</div>
+    <div class="row">
+      <div>
+        <label>Performance</label>
+        <select id="performance">
+          <option value="Speed">Speed</option>
+          <option value="Quality" selected>Quality</option>
+          <option value="Extreme Speed">Extreme Speed</option>
+        </select>
+      </div>
+      <div>
+        <label>Images</label>
+        <select id="imgNum">
+          <option value="1" selected>1 image</option>
+          <option value="2">2 images</option>
+          <option value="4">4 images</option>
+        </select>
+      </div>
+    </div>
+    <label>Guidance Scale &mdash; <span id="cfgVal">7</span></label>
+    <div class="slider-row"><input type="range" id="cfg" min="1" max="30" step="0.5" value="7"></div>
+    <label>Sharpness &mdash; <span id="sharpVal">2</span></label>
+    <div class="slider-row"><input type="range" id="sharp" min="0" max="30" step="0.5" value="2"></div>
+    <label>Output Format</label>
+    <select id="format">
+      <option value="png" selected>PNG</option>
+      <option value="jpg">JPEG</option>
+      <option value="webp">WebP</option>
+    </select>
+    <button class="generate-btn" id="genBtn" onclick="generate()">
+      <span id="btnLabel">Generate</span>
     </button>
-  </body>
+  </div>
+
+  <div class="output" id="output">
+    <div class="placeholder" id="placeholder">
+      <div class="placeholder-icon">&#10022;</div>
+      <div class="placeholder-text">Your images will appear here</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = "https://2ef4e24a1706ce41d7.gradio.live";
+let generating = false;
+let imageCount = 0;
+let selectedRatioKey = "1:1";
+let selectedStyles = ["Fooocus V2"];
+let serverSchema = null; // full /info response
+let defaultPayload = null; // cloned from server defaults
+
+// We'll build payload by starting from server defaults and only overriding what we need
+async function init() {
+  try {
+    const r = await fetch(API + "/info", { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    serverSchema = await r.json();
+    setStatus(true);
+    await loadDefaults();
+  } catch(e) {
+    setStatus(false);
+    console.warn("Init failed:", e.message);
+  }
+}
+init();
+
+async function loadDefaults() {
+  // Call fn47 (preset loader) to get a full default payload — this is the safest source of truth
+  try {
+    const r = await fetch(API + "/run/predict", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ fn_index: 47, data: ["initial", "Inpaint or Outpaint (default)"] })
+    });
+    if (!r.ok) return;
+    const j = await r.json();
+    if (j.data) {
+      defaultPayload = j.data;
+      console.log("Loaded", j.data.length, "defaults from server via fn47");
+    }
+  } catch(e) { console.warn("Could not load defaults:", e); }
+}
+
+function setStatus(ok) {
+  document.getElementById("statusDot").className = "dot " + (ok ? "live" : "error");
+  document.getElementById("statusText").textContent = ok ? "Ready" : "Offline";
+}
+
+document.getElementById("cfg").oninput = e => document.getElementById("cfgVal").textContent = e.target.value;
+document.getElementById("sharp").oninput = e => document.getElementById("sharpVal").textContent = e.target.value;
+
+document.querySelectorAll(".ratio-btn").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll(".ratio-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    selectedRatioKey = btn.dataset.key;
+  };
+});
+
+document.querySelectorAll(".style-chip").forEach(chip => {
+  chip.onclick = () => {
+    chip.classList.toggle("active");
+    const v = chip.dataset.val;
+    selectedStyles = chip.classList.contains("active")
+      ? [...selectedStyles, v]
+      : selectedStyles.filter(s => s !== v);
+  };
+});
+
+function setGenerating(state) {
+  generating = state;
+  document.getElementById("genBtn").disabled = state;
+  document.getElementById("btnLabel").textContent = state ? "Generating\u2026" : "Generate";
+}
+
+function showProgress(msg) {
+  document.getElementById("placeholder")?.remove();
+  let w = document.getElementById("progWrap");
+  if (!w) {
+    w = document.createElement("div");
+    w.id = "progWrap";
+    w.style.cssText = "width:100%;max-width:640px;display:flex;flex-direction:column;gap:10px";
+    w.innerHTML = '<div class="progress-bar"><div class="progress-fill"></div></div><div class="log-line" id="logLine"></div>';
+    document.getElementById("output").prepend(w);
+  }
+  document.getElementById("logLine").textContent = msg;
+}
+function hideProgress() { document.getElementById("progWrap")?.remove(); }
+function updateLog(msg) { const el = document.getElementById("logLine"); if(el) el.textContent = msg.substring(0,140); }
+
+function showError(title, detail) {
+  hideProgress();
+  const e = document.createElement("div");
+  e.className = "error-msg";
+  e.innerHTML = "<strong>" + title + "</strong>" + (detail ? "<br><br>" + detail : "");
+  document.getElementById("output").prepend(e);
+  setTimeout(() => e.remove(), 20000);
+}
+
+function showDebug(label, data) {
+  const d = document.createElement("div");
+  d.className = "debug-box";
+  d.textContent = label + "\n" + JSON.stringify(data, null, 2).substring(0, 2000);
+  document.getElementById("output").prepend(d);
+  setTimeout(() => d.remove(), 30000);
+}
+
+function addImage(url, index) {
+  const fmt = document.getElementById("format").value.toUpperCase();
+  const c = document.createElement("div");
+  c.className = "image-card";
+  c.innerHTML =
+    '<img src="' + url + '" alt="Generated" onerror="this.parentElement.style.display=\'none\'">' +
+    '<div class="image-meta"><div class="image-meta-info"><span class="num-badge">#' +
+    String(index).padStart(3,"0") + '</span>&nbsp;' + new Date().toLocaleTimeString() + ' &middot; ' + fmt +
+    '</div><a href="' + url + '" target="_blank"><button class="download-btn">&#8595; Save</button></a></div>';
+  document.getElementById("output").insertBefore(c, document.getElementById("output").firstChild);
+}
+
+function extractUrl(item) {
+  if (!item) return null;
+  if (typeof item === "string") return item.startsWith("http") ? item : item.startsWith("data:") ? item : API + "/file=" + item;
+  if (item.url) return item.url;
+  if (item.name) return API + "/file=" + item.name;
+  if (item.data && String(item.data).startsWith("data:")) return item.data;
+  return null;
+}
+
+// Get the actual ratio string from the server schema
+function getRatioString(key) {
+  // Try to find it in the server schema
+  if (serverSchema) {
+    try {
+      const named = serverSchema.named_endpoints || {};
+      const unnamed = serverSchema.unnamed_endpoints || {};
+      // Look through all components for aspect ratio radio options
+      const allEndpoints = Object.values(named).concat(Object.values(unnamed));
+      for (const ep of allEndpoints) {
+        for (const inp of (ep.parameters || [])) {
+          if (inp.label === "Aspect Ratios" && inp.type && inp.type.enum) {
+            const match = inp.type.enum.find(v => v.includes(key.split(":")[0] + "\u00d7") || v.replace(/<[^>]*>/g,"").includes(key));
+            if (match) return match;
+          }
+        }
+      }
+    } catch(e) {}
+  }
+  // Fallback hardcoded map
+  const MAP = {
+    "9:7":  "1152\u00d7896 <span style=\"color: grey;\"> \u2223 9:7</span>",
+    "1:1":  "1024\u00d71024 <span style=\"color: grey;\"> \u2223 1:1</span>",
+    "7:9":  "896\u00d71152 <span style=\"color: grey;\"> \u2223 7:9</span>",
+    "3:2":  "1216\u00d7832 <span style=\"color: grey;\"> \u2223 3:2</span>",
+    "2:3":  "832\u00d71216 <span style=\"color: grey;\"> \u2223 2:3</span>",
+    "7:4":  "1344\u00d7768 <span style=\"color: grey;\"> \u2223 7:4</span>",
+    "4:7":  "768\u00d71344 <span style=\"color: grey;\"> \u2223 4:7</span>",
+    "12:5": "1536\u00d7640 <span style=\"color: grey;\"> \u2223 12:5</span>",
+    "5:12": "640\u00d71536 <span style=\"color: grey;\"> \u2223 5:12</span>"
+  };
+  return MAP[key] || MAP["1:1"];
+}
+
+async function generate() {
+  if (generating) return;
+  const prompt = document.getElementById("prompt").value.trim();
+  if (!prompt) { document.getElementById("prompt").focus(); return; }
+
+  setGenerating(true);
+  showProgress("Preparing\u2026");
+
+  // If we don't have defaults yet, try loading them now
+  if (!defaultPayload) await loadDefaults();
+
+  const seed = String(Math.floor(Math.random() * 2147483647));
+  const ratio = getRatioString(selectedRatioKey);
+  const styles = selectedStyles.length ? selectedStyles : ["Fooocus V2"];
+  const negPrompt = document.getElementById("negPrompt").value || "";
+  const perf = document.getElementById("performance").value;
+  const numImages = parseInt(document.getElementById("imgNum").value);
+  const fmt = document.getElementById("format").value;
+  const cfg = parseFloat(document.getElementById("cfg").value);
+  const sharp = parseFloat(document.getElementById("sharp").value);
+
+  let data;
+
+  if (defaultPayload && defaultPayload.length >= 50) {
+    // ---- STRATEGY A: Clone server defaults and patch only what we need ----
+    // fn47 returns the same shape as fn67 inputs (minus first 2 params)
+    // fn67 params: [gridBatch, prompt, negPrompt, styles, perf, ratio, numImages, fmt, seed, wildcards, sharp, cfg, baseModel, refiner, refinerSwitch, lora1enable, lora1model, lora1weight, ...lora2-5..., inputImage, ...]
+    // fn47 returns: [advanced, numImages, prompt, negPrompt, styles, perf, step, refStep, ratio, width, height, cfg, sharp, posADM, negADM, admEnd, refSwap, cfgMimic, clipSkip, baseModel, refiner, refinerSwitch, sampler, scheduler, vae, random, seed, inpaintEngine, method*4, btn*2, freeUEnabled, b1, b2, s1, s2, lora1en, lora1model, lora1w, ...lora2-5en...]
+    const d = defaultPayload;
+    const baseModel = d[19] || "realisticStockPhoto_v20.safetensors";
+    const refiner   = d[20] || "None";
+    const refSwitch = d[21] || 0.8;
+    const sampler   = d[22] || "dpmpp_2m_sde_gpu";
+    const scheduler = d[23] || "karras";
+    const vae       = d[24] || "Default (model)";
+    const lora1en = d[35]; const lora1m = d[36]; const lora1w = d[37];
+    const lora2en = d[38]; const lora2m = d[39]; const lora2w = d[40];
+    const lora3en = d[41]; const lora3m = d[42]; const lora3w = d[43];
+    const lora4en = d[44]; const lora4m = d[45]; const lora4w = d[46];
+    const lora5en = d[47]; const lora5m = d[48]; const lora5w = d[49];
+
+    data = [
+      false,          // Generate Image Grid for Each Batch
+      prompt,         // parameter_12
+      negPrompt,      // Negative Prompt
+      styles,         // Selected Styles
+      perf,           // Performance
+      ratio,          // Aspect Ratios
+      numImages,      // Image Number
+      fmt,            // Output Format
+      seed,           // Seed
+      false,          // Read wildcards in order
+      sharp,          // Image Sharpness
+      cfg,            // Guidance Scale
+      baseModel,      // Base Model
+      refiner,        // Refiner
+      refSwitch,      // Refiner Switch At
+      lora1en, lora1m, lora1w,
+      lora2en, lora2m, lora2w,
+      lora3en, lora3m, lora3w,
+      lora4en, lora4m, lora4w,
+      lora5en, lora5m, lora5w,
+      false,          // Input Image checkbox
+      "",             // parameter_212
+      "Disabled",     // Upscale or Variation
+      null,           // Upscale image
+      [],             // Outpaint Direction
+      null,           // Inpaint image
+      "",             // Inpaint Additional Prompt
+      null,           // Mask Upload
+      false,          // Disable Preview
+      false,          // Disable Intermediate Results
+      false,          // Disable seed increment
+      false,          // Black Out NSFW
+      1.5,            // Positive ADM Guidance Scaler
+      0.8,            // Negative ADM Guidance Scaler
+      0.3,            // ADM Guidance End At Step
+      7.0,            // CFG Mimicking from TSNR
+      2,              // CLIP Skip
+      sampler,        // Sampler
+      scheduler,      // Scheduler
+      vae,            // VAE
+      -1, -1, -1, -1, -1, -1,  // Forced overwrite params
+      false, false,   // Mixing flags
+      false, false,   // Debug flags
+      64, 128,        // Canny thresholds
+      "joint",        // Refiner swap method
+      0.5,            // Softness of ControlNet
+      false,          // FreeU Enabled
+      1.01, 1.02, 0.99, 0.95,
+      false,          // Debug Inpaint Preprocessing
+      false,          // Disable initial latent in inpaint
+      "None",         // Inpaint Engine
+      1.0, 0.618,     // Inpaint Denoising Strength, Respective Field
+      false,          // Enable Advanced Masking Features
+      false,          // Invert Mask When Generating
+      0,              // Mask Erode or Dilate
+      true,           // Save only final enhanced image
+      false,          // Save Metadata to Images
+      "fooocus",      // Metadata Scheme
+      null, 0, 1, "ImagePrompt",
+      null, 0, 1, "ImagePrompt",
+      null, 0, 1, "ImagePrompt",
+      null, 0, 1, "ImagePrompt",
+      false, 0, false,
+      null,
+      false, "Disabled", "Before First Enhancement", "Original Prompts",
+      false, "", "", "", "u2net", "full", "vit_b", 0, 0, 0, false, "None", 1.0, 0.618, 0, false,
+      false, "", "", "", "u2net", "full", "vit_b", 0, 0, 0, false, "None", 1.0, 0.618, 0, false,
+      false, "", "", "", "u2net", "full", "vit_b", 0, 0, 0, false, "None", 1.0, 0.618, 0, false
+    ];
+    console.log("Strategy A: using server defaults, payload length =", data.length);
+  } else {
+    // ---- STRATEGY B: minimal hardcoded fallback ----
+    data = [
+      false, prompt, negPrompt, styles, perf, ratio, numImages, fmt, seed, false,
+      sharp, cfg,
+      "realisticStockPhoto_v20.safetensors", "None", 0.8,
+      true, "None", 1, true, "None", 1, true, "None", 1, true, "None", 1, true, "None", 1,
+      false, "", "Disabled", null, [], null, "", null,
+      false, false, false, false,
+      1.5, 0.8, 0.3, 7.0, 2,
+      "dpmpp_2m_sde_gpu", "karras", "Default (model)",
+      -1, -1, -1, -1, -1, -1,
+      false, false, false, false, 64, 128,
+      "joint", 0.5,
+      false, 1.01, 1.02, 0.99, 0.95,
+      false, false, "None", 1.0, 0.618,
+      false, false, 0, true, false, "fooocus",
+      null, 0, 1, "ImagePrompt",
+      null, 0, 1, "ImagePrompt",
+      null, 0, 1, "ImagePrompt",
+      null, 0, 1, "ImagePrompt",
+      false, 0, false, null,
+      false, "Disabled", "Before First Enhancement", "Original Prompts",
+      false, "", "", "", "u2net", "full", "vit_b", 0, 0, 0, false, "None", 1.0, 0.618, 0, false,
+      false, "", "", "", "u2net", "full", "vit_b", 0, 0, 0, false, "None", 1.0, 0.618, 0, false,
+      false, "", "", "", "u2net", "full", "vit_b", 0, 0, 0, false, "None", 1.0, 0.618, 0, false
+    ];
+    console.log("Strategy B: hardcoded fallback, payload length =", data.length);
+  }
+
+  // Fire generation — don't await
+  const ctrl = new AbortController();
+  let genDone = false, genErr = null, directUrls = [];
+
+  fetch(API + "/run/predict", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ fn_index: 67, data }),
+    signal: ctrl.signal
+  }).then(async r => {
+    genDone = true;
+    if (!r.ok) {
+      const txt = await r.text().catch(() => r.statusText);
+      genErr = "Server " + r.status + ": " + txt.substring(0, 600);
+      // Show debug info to help diagnose param issues
+      showDebug("Request payload (fn_index 67, " + data.length + " params)", data);
+    } else {
+      try {
+        const j = await r.json();
+        if (j.error) { genErr = j.error; return; }
+        for (const slot of (j.data || [])) {
+          if (!Array.isArray(slot)) continue;
+          for (const item of slot) {
+            const target = Array.isArray(item) ? item[0] : item;
+            const u = extractUrl(target);
+            if (u) directUrls.push(u);
+          }
+        }
+      } catch(e) {}
+    }
+  }).catch(e => {
+    if (e.name !== "AbortError") { genDone = true; genErr = e.message; }
+  });
+
+  showProgress("Generating\u2026 (this takes ~30\u201360s)");
+
+  const seenUrls = new Set();
+  const MAX = 150;
+  for (let i = 0; i < MAX; i++) {
+    await new Promise(r => setTimeout(r, 2500));
+
+    for (const u of directUrls) {
+      if (!seenUrls.has(u)) { seenUrls.add(u); imageCount++; addImage(u, imageCount); }
+    }
+
+    if (genDone && genErr && seenUrls.size === 0) {
+      hideProgress();
+      showError("Generation failed", genErr);
+      setGenerating(false);
+      return;
+    }
+    if (genDone && seenUrls.size > 0) {
+      hideProgress(); setGenerating(false); return;
+    }
+
+    try {
+      const r = await fetch(API + "/run/predict", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ fn_index: 68, data: [] })
+      });
+      if (!r.ok) continue;
+      const j = await r.json();
+      if (!j.data) continue;
+
+      const txt = String(j.data[0] || "").replace(/<[^>]*>/g, "").trim();
+      if (txt) updateLog(txt);
+
+      for (const slot of j.data) {
+        if (!Array.isArray(slot)) continue;
+        for (const item of slot) {
+          const target = Array.isArray(item) ? item[0] : item;
+          const u = extractUrl(target);
+          if (u && !seenUrls.has(u)) { seenUrls.add(u); imageCount++; addImage(u, imageCount); }
+        }
+      }
+
+      if ((txt.toLowerCase().includes("finish") || txt.includes("100%")) && seenUrls.size > 0) {
+        ctrl.abort(); hideProgress(); setGenerating(false); return;
+      }
+    } catch(e) {}
+  }
+
+  ctrl.abort();
+  hideProgress();
+  if (seenUrls.size === 0) showError("Timed out", "The server may be busy — try again shortly.");
+  setGenerating(false);
+}
+</script>
+</body>
 </html>
